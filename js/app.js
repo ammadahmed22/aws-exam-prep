@@ -4,6 +4,7 @@ class QuizApp {
         this.questions = [];
         this.userAnswers = [];
         this.score = 0;
+        this.questionsPerExam = 60; // Default number of questions per exam
         
         // DOM Elements
         this.welcomeScreen = document.getElementById('welcome-screen');
@@ -21,6 +22,13 @@ class QuizApp {
         this.nextButton = document.getElementById('next-btn');
         this.restartButton = document.getElementById('restart-btn');
         
+        // Update welcome screen with total questions available
+        const totalQuestions = window.quizData.getTotalQuestions();
+        const welcomeText = document.querySelector('#welcome-screen p');
+        if (welcomeText) {
+            welcomeText.textContent = `This exam consists of ${this.questionsPerExam} randomly selected questions from a pool of ${totalQuestions} questions.`;
+        }
+        
         // Bind event listeners
         this.startButton.addEventListener('click', () => this.startExam());
         this.prevButton.addEventListener('click', () => this.showPreviousQuestion());
@@ -30,7 +38,7 @@ class QuizApp {
     }
 
     startExam() {
-        this.questions = window.quizData.getRandomQuestions(60);
+        this.questions = window.quizData.getRandomQuestions(this.questionsPerExam);
         this.userAnswers = new Array(this.questions.length).fill(null);
         this.currentQuestionIndex = 0;
         this.score = 0;

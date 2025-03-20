@@ -166,6 +166,32 @@ h1 {
     border-bottom: none;
 }
 
+.exam-info {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.exam-info ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+
+.exam-info li {
+    padding: 8px 0;
+    position: relative;
+    padding-left: 25px;
+}
+
+.exam-info li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #4CAF50;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 10px;
