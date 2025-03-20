@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Certification Exam Prep</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AWS Certification Exam Prep</h1>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <span id="progress-text">Question 0/60</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="screen active">
+                <h2>Welcome to AWS Certification Exam Prep</h2>
+                <p>This exam consists of 60 randomly selected questions.</p>
+                <p>Passing score: 700/1000 points</p>
+                <button id="start-exam" class="btn primary-btn">Start Exam</button>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" class="screen">
+                <div class="question-container">
+                    <h2 id="question-text"></h2>
+                    <div id="options-container" class="options-container"></div>
+                </div>
+                <div class="navigation-buttons">
+                    <button id="prev-btn" class="btn">Previous</button>
+                    <button id="submit-btn" class="btn primary-btn">Submit</button>
+                    <button id="next-btn" class="btn" disabled>Next</button>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="results-screen" class="screen">
+                <h2>Exam Results</h2>
+                <div class="score-container">
+                    <p>Your Score: <span id="final-score">0</span>/1000</p>
+                    <p id="pass-fail-status"></p>
+                </div>
+                <div class="review-container">
+                    <div class="review-section">
+                        <h3>Correct Answers (<span id="correct-count">0</span>)</h3>
+                        <div id="correct-answers-list" class="review-list"></div>
+                    </div>
+                    <div class="review-section">
+                        <h3>Incorrect Answers (<span id="incorrect-count">0</span>)</h3>
+                        <div id="incorrect-answers-list" class="review-list"></div>
+                    </div>
+                </div>
+                <button id="restart-btn" class="btn primary-btn">Restart Exam</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/questions.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html> 
