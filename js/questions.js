@@ -1010,6 +1010,7 @@ const questions =
 function getRandomQuestions(count = 60) {
     // Get total number of available questions
     const totalAvailableQuestions = questions.length;
+    console.log(`Total questions in pool: ${totalAvailableQuestions}`);
     
     // Validate the requested count
     if (count > totalAvailableQuestions) {
@@ -1025,7 +1026,9 @@ function getRandomQuestions(count = 60) {
     }
     
     // Take the first 'count' indices and map them to questions
-    return indices.slice(0, count).map(index => questions[index]);
+    const selectedQuestions = indices.slice(0, count).map(index => questions[index]);
+    console.log(`Selected ${selectedQuestions.length} questions for the exam`);
+    return selectedQuestions;
 }
 
 // Function to check if a question requires multiple answers

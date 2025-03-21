@@ -14,6 +14,8 @@ class QuizApp {
         this.optionsContainer = document.getElementById('options-container');
         this.progressBar = document.getElementById('progress');
         this.progressText = document.getElementById('progress-text');
+        this.questionCountInput = document.getElementById('question-count');
+        this.savedExamsList = document.getElementById('saved-exams-list');
         
         // Buttons
         this.startButton = document.getElementById('start-exam');
@@ -21,6 +23,7 @@ class QuizApp {
         this.submitButton = document.getElementById('submit-btn');
         this.nextButton = document.getElementById('next-btn');
         this.restartButton = document.getElementById('restart-btn');
+        this.saveExamButton = document.getElementById('save-exam-btn');
         
         // Update welcome screen with total questions available
         const totalQuestions = window.quizData.getTotalQuestions();
@@ -29,15 +32,115 @@ class QuizApp {
             welcomeText.textContent = `This exam consists of ${this.questionsPerExam} randomly selected questions from a pool of ${totalQuestions} questions.`;
         }
         
+        // Initialize progress text
+        this.progressText.textContent = `Question 0/${this.questionsPerExam}`;
+        
+        // Load saved exams
+        this.loadSavedExams();
+        
         // Bind event listeners
         this.startButton.addEventListener('click', () => this.startExam());
         this.prevButton.addEventListener('click', () => this.showPreviousQuestion());
         this.submitButton.addEventListener('click', () => this.submitAnswer());
         this.nextButton.addEventListener('click', () => this.showNextQuestion());
         this.restartButton.addEventListener('click', () => this.restartExam());
+        this.saveExamButton.addEventListener('click', () => this.saveExam());
+        
+        // Validate question count input
+        this.questionCountInput.addEventListener('change', () => {
+            let value = parseInt(this.questionCountInput.value);
+            if (isNaN(value) || value < 1) value = 60;
+            if (value > 60) value = 60;
+            this.questionCountInput.value = value;
+        });
+    }
+
+    loadSavedExams() {
+        const savedExams = JSON.parse(localStorage.getItem('savedExams') || '[]');
+        this.savedExamsList.innerHTML = '';
+        
+        if (savedExams.length === 0) {
+            this.savedExamsList.innerHTML = '<p>No saved exams</p>';
+            return;
+        }
+        
+        savedExams.forEach((exam, index) => {
+            const examElement = document.createElement('div');
+            examElement.className = 'saved-exam-item';
+            
+            const date = new Date(exam.saveDate);
+            const formattedDate = date.toLocaleString();
+            
+            examElement.innerHTML = `
+                <div class="saved-exam-info">
+                    <p>Saved on: ${formattedDate}</p>
+                    <p>Progress: ${exam.currentQuestionIndex + 1}/${exam.questions.length} questions</p>
+                </div>
+                <div class="saved-exam-actions">
+                    <button class="btn primary-btn resume-exam" data-index="${index}">Resume</button>
+                    <button class="btn secondary-btn delete-exam" data-index="${index}">Delete</button>
+                </div>
+            `;
+            
+            this.savedExamsList.appendChild(examElement);
+        });
+        
+        // Add event listeners for resume and delete buttons
+        this.savedExamsList.querySelectorAll('.resume-exam').forEach(button => {
+            button.addEventListener('click', (e) => this.resumeExam(parseInt(e.target.dataset.index)));
+        });
+        
+        this.savedExamsList.querySelectorAll('.delete-exam').forEach(button => {
+            button.addEventListener('click', (e) => this.deleteExam(parseInt(e.target.dataset.index)));
+        });
+    }
+
+    saveExam() {
+        const savedExams = JSON.parse(localStorage.getItem('savedExams') || '[]');
+        const examData = {
+            questions: this.questions,
+            userAnswers: this.userAnswers,
+            currentQuestionIndex: this.currentQuestionIndex,
+            saveDate: new Date().toISOString()
+        };
+        
+        savedExams.push(examData);
+        localStorage.setItem('savedExams', JSON.stringify(savedExams));
+        
+        // Show confirmation message
+        alert('Exam saved successfully!');
+    }
+
+    resumeExam(index) {
+        const savedExams = JSON.parse(localStorage.getItem('savedExams') || '[]');
+        const examData = savedExams[index];
+        
+        this.questions = examData.questions;
+        this.userAnswers = examData.userAnswers;
+        this.currentQuestionIndex = examData.currentQuestionIndex;
+        this.questionsPerExam = this.questions.length;
+        
+        this.welcomeScreen.classList.remove('active');
+        this.quizScreen.classList.add('active');
+        this.showQuestion();
+    }
+
+    deleteExam(index) {
+        if (confirm('Are you sure you want to delete this saved exam?')) {
+            const savedExams = JSON.parse(localStorage.getItem('savedExams') || '[]');
+            savedExams.splice(index, 1);
+            localStorage.setItem('savedExams', JSON.stringify(savedExams));
+            this.loadSavedExams();
+        }
     }
 
     startExam() {
+        // Get the number of questions from input
+        let questionCount = parseInt(this.questionCountInput.value);
+        if (isNaN(questionCount) || questionCount < 1) questionCount = 60;
+        if (questionCount > 60) questionCount = 60;
+        
+        this.questionsPerExam = questionCount;
         this.questions = window.quizData.getRandomQuestions(this.questionsPerExam);
         this.userAnswers = new Array(this.questions.length).fill(null);
         this.currentQuestionIndex = 0;
@@ -151,9 +254,9 @@ class QuizApp {
     }
 
     updateProgress() {
-        const progress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
+        const progress = ((this.currentQuestionIndex + 1) / this.questionsPerExam) * 100;
         this.progressBar.style.width = `${progress}%`;
-        this.progressText.textContent = `Question ${this.currentQuestionIndex + 1}/${this.questions.length}`;
+        this.progressText.textContent = `Question ${this.currentQuestionIndex + 1}/${this.questionsPerExam}`;
     }
 
     calculateScore() {
