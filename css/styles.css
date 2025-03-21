@@ -192,6 +192,73 @@ h1 {
     color: #4CAF50;
 }
 
+.question-count-section {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.question-count-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.question-count-section input {
+    width: 100px;
+    padding: 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.saved-exams-section {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.saved-exams-section h3 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.saved-exams-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.saved-exam-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saved-exam-info {
+    flex-grow: 1;
+}
+
+.saved-exam-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.secondary-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.secondary-btn:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 10px;
