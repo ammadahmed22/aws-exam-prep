@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AWS Certification Exam Prep</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -15,6 +16,7 @@
                     <div class="progress" id="progress"></div>
                 </div>
                 <span id="progress-text">Question 0/60</span>
+                <div id="timer">0:00</div>
             </div>
         </header>
 
@@ -55,7 +57,12 @@
             <!-- Quiz Screen -->
             <div id="quiz-screen" class="screen">
                 <div class="question-container">
-                    <h2 id="question-text"></h2>
+                    <div class="question-header">
+                        <h2 id="question-text"></h2>
+                        <button id="copy-question-btn" class="copy-btn" title="Copy question">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
                     <div id="options-container" class="options-container"></div>
                 </div>
                 <div class="navigation-buttons">
@@ -72,6 +79,10 @@
                 <div class="score-container">
                     <p>Your Score: <span id="final-score">0</span>/1000</p>
                     <p id="pass-fail-status"></p>
+                    <div class="timing-stats">
+                        <p>Total Time: <span id="total-time">0:00</span></p>
+                        <p>Average Time per Question: <span id="avg-time">0:00</span></p>
+                    </div>
                 </div>
                 <div class="review-container">
                     <div class="review-section">
@@ -81,6 +92,7 @@
                     <div class="review-section">
                         <h3>Incorrect Answers (<span id="incorrect-count">0</span>)</h3>
                         <div id="incorrect-answers-list" class="review-list"></div>
+                        <button id="copy-incorrect-btn" class="btn secondary-btn">Copy All Incorrect Questions</button>
                     </div>
                 </div>
                 <button id="restart-btn" class="btn primary-btn">Restart Exam</button>
