@@ -259,6 +259,60 @@ h1 {
     background-color: #5a6268;
 }
 
+.question-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.question-header h2 {
+    margin: 0;
+    flex: 1;
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.copy-btn:hover {
+    color: #007bff;
+}
+
+.copy-btn.copied {
+    color: #28a745;
+}
+
+.timing-stats {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.timing-stats p {
+    margin: 0.5rem 0;
+}
+
+#timer {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+#timer.warning {
+    color: #ffc107;
+}
+
+#timer.danger {
+    color: #dc3545;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 10px;

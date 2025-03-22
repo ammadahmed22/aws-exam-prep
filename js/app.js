@@ -25,6 +25,20 @@ class QuizApp {
         this.restartButton = document.getElementById('restart-btn');
         this.saveExamButton = document.getElementById('save-exam-btn');
         
+        // Timer properties
+        this.startTime = null;
+        this.questionStartTime = null;
+        this.questionTimes = [];
+        this.timerInterval = null;
+        
+        // Copy button elements
+        this.copyQuestionBtn = document.getElementById('copy-question-btn');
+        this.copyIncorrectBtn = document.getElementById('copy-incorrect-btn');
+        
+        // Timer display elements
+        this.totalTimeDisplay = document.getElementById('total-time');
+        this.avgTimeDisplay = document.getElementById('avg-time');
+        
         // Update welcome screen with total questions available
         const totalQuestions = window.quizData.getTotalQuestions();
         const welcomeText = document.querySelector('#welcome-screen p');
@@ -45,6 +59,8 @@ class QuizApp {
         this.nextButton.addEventListener('click', () => this.showNextQuestion());
         this.restartButton.addEventListener('click', () => this.restartExam());
         this.saveExamButton.addEventListener('click', () => this.saveExam());
+        this.copyQuestionBtn.addEventListener('click', () => this.copyCurrentQuestion());
+        this.copyIncorrectBtn.addEventListener('click', () => this.copyIncorrectQuestions());
         
         // Validate question count input
         this.questionCountInput.addEventListener('change', () => {
@@ -146,9 +162,40 @@ class QuizApp {
         this.currentQuestionIndex = 0;
         this.score = 0;
         
+        // Start the exam timer
+        this.startTime = Date.now();
+        this.questionStartTime = this.startTime;
+        this.questionTimes = [];
+        this.startTimer();
+        
         this.welcomeScreen.classList.remove('active');
         this.quizScreen.classList.add('active');
         this.showQuestion();
+    }
+
+    startTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        
+        this.timerInterval = setInterval(() => {
+            const elapsed = Date.now() - this.startTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            
+            // Update timer display
+            const timerDisplay = document.getElementById('timer');
+            if (timerDisplay) {
+                timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Add warning colors based on time
+                if (minutes >= 80) {
+                    timerDisplay.classList.add('danger');
+                } else if (minutes >= 70) {
+                    timerDisplay.classList.add('warning');
+                }
+            }
+        }, 1000);
     }
 
     showQuestion() {
@@ -186,6 +233,12 @@ class QuizApp {
         this.prevButton.disabled = this.currentQuestionIndex === 0;
         this.nextButton.disabled = !this.userAnswers[this.currentQuestionIndex];
         this.submitButton.disabled = false;
+        
+        // Update question start time
+        this.questionStartTime = Date.now();
+        
+        // Hide copy button when showing a new question
+        this.copyQuestionBtn.style.display = 'none';
     }
 
     handleOptionClick(optionElement, selectedOption) {
@@ -208,6 +261,10 @@ class QuizApp {
     }
 
     submitAnswer() {
+        // Record time taken for this question
+        const questionTime = Date.now() - this.questionStartTime;
+        this.questionTimes.push(questionTime);
+        
         const question = this.questions[this.currentQuestionIndex];
         const userAnswer = this.userAnswers[this.currentQuestionIndex];
         const correctAnswer = question.correctAnswer;
@@ -232,6 +289,9 @@ class QuizApp {
 
         this.submitButton.disabled = true;
         this.nextButton.disabled = false;
+        
+        // Show the copy button after submission
+        this.copyQuestionBtn.style.display = 'block';
         
         // If this is the last question, show the results
         if (this.currentQuestionIndex === this.questions.length - 1) {
@@ -332,11 +392,74 @@ class QuizApp {
         
         correctCount.textContent = correctAnswers;
         incorrectCount.textContent = incorrectAnswers;
+        
+        // Clear timer
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        
+        // Calculate and display timing statistics
+        const totalTime = Date.now() - this.startTime;
+        const totalMinutes = Math.floor(totalTime / 60000);
+        const totalSeconds = Math.floor((totalTime % 60000) / 1000);
+        this.totalTimeDisplay.textContent = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+        
+        const avgTime = this.questionTimes.reduce((a, b) => a + b, 0) / this.questionTimes.length;
+        const avgSeconds = Math.floor(avgTime / 1000);
+        this.avgTimeDisplay.textContent = `${avgSeconds} seconds`;
     }
 
     restartExam() {
         this.resultsScreen.classList.remove('active');
         this.welcomeScreen.classList.add('active');
+    }
+
+    copyCurrentQuestion() {
+        const question = this.questions[this.currentQuestionIndex];
+        const text = this.formatQuestionForCopy(question);
+        this.copyToClipboard(text);
+        this.showCopyFeedback(this.copyQuestionBtn);
+    }
+
+    copyIncorrectQuestions() {
+        const incorrectQuestions = this.questions.filter((q, index) => 
+            !this.isAnswerCorrect(q, this.userAnswers[index])
+        );
+        
+        const text = incorrectQuestions.map(q => this.formatQuestionForCopy(q)).join('\n\n');
+        this.copyToClipboard(text);
+        this.showCopyFeedback(this.copyIncorrectBtn);
+    }
+
+    formatQuestionForCopy(question) {
+        const options = question.options.map((opt, idx) => 
+            `${String.fromCharCode(65 + idx)}) ${opt}`
+        ).join('\n');
+        
+        return `Question: ${question.question}\n\nOptions:\n${options}\n\nCorrect Answer: ${Array.isArray(question.correctAnswer) ? 
+            question.correctAnswer.join(', ') : question.correctAnswer}`;
+    }
+
+    copyToClipboard(text) {
+        navigator.clipboard.writeText(text).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
+    showCopyFeedback(button) {
+        button.classList.add('copied');
+        setTimeout(() => {
+            button.classList.remove('copied');
+        }, 2000);
+    }
+
+    isAnswerCorrect(question, userAnswer) {
+        if (Array.isArray(question.correctAnswer)) {
+            return Array.isArray(userAnswer) && 
+                   question.correctAnswer.length === userAnswer.length &&
+                   question.correctAnswer.every(ans => userAnswer.includes(ans));
+        }
+        return userAnswer === question.correctAnswer;
     }
 }
 
