@@ -4,7 +4,7 @@ class QuizApp {
         this.questions = [];
         this.userAnswers = [];
         this.score = 0;
-        this.questionsPerExam = 60; // Default number of questions per exam
+        this.questionsPerExam = 65; // Default number of questions per exam
         
         // DOM Elements
         this.welcomeScreen = document.getElementById('welcome-screen');
@@ -65,8 +65,8 @@ class QuizApp {
         // Validate question count input
         this.questionCountInput.addEventListener('change', () => {
             let value = parseInt(this.questionCountInput.value);
-            if (isNaN(value) || value < 1) value = 60;
-            if (value > 60) value = 60;
+            if (isNaN(value) || value < 1) value = 65;
+            if (value > 65) value = 65;
             this.questionCountInput.value = value;
         });
     }
@@ -153,8 +153,8 @@ class QuizApp {
     startExam() {
         // Get the number of questions from input
         let questionCount = parseInt(this.questionCountInput.value);
-        if (isNaN(questionCount) || questionCount < 1) questionCount = 60;
-        if (questionCount > 60) questionCount = 60;
+        if (isNaN(questionCount) || questionCount < 1) questionCount = 65;
+        if (questionCount > 65) questionCount = 65;
         
         this.questionsPerExam = questionCount;
         this.questions = window.quizData.getRandomQuestions(this.questionsPerExam);
