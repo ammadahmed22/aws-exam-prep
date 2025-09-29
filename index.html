@@ -8,50 +8,59 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
+    <div class="main-header">
+        <h1>AWS Certification Exam Prep</h1>
+        <div class="theme-switcher">
+            <i class="fas fa-sun"></i>
+            <label class="switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider round"></span>
+            </label>
+            <i class="fas fa-moon"></i>
+        </div>
+    </div>
+
     <div class="container">
-        <header>
-            <h1>AWS Certification Exam Prep</h1>
+        <header class="quiz-header" style="display: none;">
             <div class="progress-container">
                 <div class="progress-bar">
                     <div class="progress" id="progress"></div>
                 </div>
-                <span id="progress-text">Question 0/60</span>
-                <div id="timer">0:00</div>
+                <span id="progress-text">Question 0/65</span>
             </div>
+            <div id="timer">0:00</div>
         </header>
 
         <main>
             <!-- Welcome Screen -->
             <div id="welcome-screen" class="screen active">
-                <h2>Welcome to AWS Certification Exam Prep</h2>
-                <p>Loading question pool...</p>
-                <p>Passing score: 700/1000 points</p>
-                
-                <!-- Question Count Selection -->
-                <div class="question-count-section">
-                    <label for="question-count">Number of Questions (1-65):</label>
-                    <input type="number" id="question-count" min="1" max="65" value="65" placeholder="Default: 65">
-                </div>
-
-                <!-- Saved Exams Section -->
-                <div class="saved-exams-section">
-                    <h3>Saved Exams</h3>
-                    <div id="saved-exams-list" class="saved-exams-list">
-                        <!-- Saved exams will be listed here -->
+                <div class="welcome-grid">
+                    <div class="start-exam-section">
+                        <h2>Start a New Exam</h2>
+                        <p id="exam-description">Select the number of questions and begin your exam.</p>
+                        <div class="question-count-section">
+                            <label for="question-count">Number of Questions (1-65):</label>
+                            <input type="number" id="question-count" min="1" max="65" value="65">
+                        </div>
+                        <button id="start-exam" class="btn primary-btn">Start New Exam</button>
+                        <div class="exam-info">
+                            <h3>Features</h3>
+                            <ul>
+                                <li>Randomly selected questions from a large pool</li>
+                                <li>Immediate feedback on answers</li>
+                                <li>Review correct and incorrect answers</li>
+                                <li>Track progress with a detailed score breakdown</li>
+                                <li>Save progress and resume later</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="saved-exams-section">
+                        <h2>Saved Exams</h2>
+                        <div id="saved-exams-list" class="saved-exams-list">
+                            <!-- Saved exams will be dynamically loaded here -->
+                        </div>
                     </div>
                 </div>
-
-                <div class="exam-info">
-                    <p>Features:</p>
-                    <ul>
-                        <li>Questions are randomly selected from a large pool</li>
-                        <li>Immediate feedback on your answers</li>
-                        <li>Review your correct and incorrect answers</li>
-                        <li>Track your progress with a detailed score breakdown</li>
-                        <li>Save your progress and resume later</li>
-                    </ul>
-                </div>
-                <button id="start-exam" class="btn primary-btn">Start New Exam</button>
             </div>
 
             <!-- Quiz Screen -->
@@ -76,29 +85,41 @@
             <!-- Results Screen -->
             <div id="results-screen" class="screen">
                 <h2>Exam Results</h2>
-                <div class="score-container">
-                    <p>Your Score: <span id="final-score">0</span>/1000</p>
-                    <p id="pass-fail-status"></p>
-                    <div class="timing-stats">
-                        <p>Total Time: <span id="total-time">0:00</span></p>
-                        <p>Average Time per Question: <span id="avg-time">0:00</span></p>
+                <div class="results-grid">
+                    <div class="score-summary">
+                        <div class="score-container">
+                            <p>Your Score:</p>
+                            <p class="final-score-display"><span id="final-score">0</span>/1000</p>
+                            <p id="pass-fail-status"></p>
+                        </div>
+                        <div class="timing-stats">
+                            <h3>Exam Statistics</h3>
+                            <p>Total Time: <span id="total-time">0:00</span></p>
+                            <p>Average Time per Question: <span id="avg-time">0s</span></p>
+                        </div>
+                        <button id="restart-btn" class="btn primary-btn">Back to Home</button>
+                    </div>
+                    <div class="review-container">
+                        <div class="review-tabs">
+                            <button class="tab-link active" onclick="openTab(event, 'correct')">Correct (<span id="correct-count">0</span>)</button>
+                            <button class="tab-link" onclick="openTab(event, 'incorrect')">Incorrect (<span id="incorrect-count">0</span>)</button>
+                        </div>
+
+                        <div id="correct" class="tab-content" style="display: block;">
+                            <div id="correct-answers-list" class="review-list"></div>
+                        </div>
+
+                        <div id="incorrect" class.blade.php" class="tab-content">
+                            <div id="incorrect-answers-list" class="review-list"></div>
+                            <button id="copy-incorrect-btn" class="btn secondary-btn">Copy Incorrect Questions</button>
+                        </div>
                     </div>
                 </div>
-                <div class="review-container">
-                    <div class="review-section">
-                        <h3>Correct Answers (<span id="correct-count">0</span>)</h3>
-                        <div id="correct-answers-list" class="review-list"></div>
-                    </div>
-                    <div class="review-section">
-                        <h3>Incorrect Answers (<span id="incorrect-count">0</span>)</h3>
-                        <div id="incorrect-answers-list" class="review-list"></div>
-                        <button id="copy-incorrect-btn" class="btn secondary-btn">Copy All Incorrect Questions</button>
-                    </div>
-                </div>
-                <button id="restart-btn" class="btn primary-btn">Restart Exam</button>
             </div>
         </main>
     </div>
+
+    <div id="toast-container"></div>
 
     <script src="js/questions.js"></script>
     <script src="js/app.js"></script>

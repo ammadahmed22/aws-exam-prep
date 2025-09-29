@@ -1,12 +1,28 @@
+function openTab(evt, tabName) {
+    let i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab-link");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
 class QuizApp {
     constructor() {
         this.currentQuestionIndex = 0;
         this.questions = [];
         this.userAnswers = [];
         this.score = 0;
-        this.questionsPerExam = 65; // Default number of questions per exam
-        
+        this.questionsPerExam = 65;
+
         // DOM Elements
+        this.mainHeader = document.querySelector('.main-header');
+        this.quizHeader = document.querySelector('.quiz-header');
         this.welcomeScreen = document.getElementById('welcome-screen');
         this.quizScreen = document.getElementById('quiz-screen');
         this.resultsScreen = document.getElementById('results-screen');
@@ -16,7 +32,9 @@ class QuizApp {
         this.progressText = document.getElementById('progress-text');
         this.questionCountInput = document.getElementById('question-count');
         this.savedExamsList = document.getElementById('saved-exams-list');
-        
+        this.toastContainer = document.getElementById('toast-container');
+        this.themeToggle = document.getElementById('theme-toggle');
+
         // Buttons
         this.startButton = document.getElementById('start-exam');
         this.prevButton = document.getElementById('prev-btn');
@@ -39,18 +57,21 @@ class QuizApp {
         this.totalTimeDisplay = document.getElementById('total-time');
         this.avgTimeDisplay = document.getElementById('avg-time');
         
+        this.init();
+    }
+
+    init() {
         // Update welcome screen with total questions available
         const totalQuestions = window.quizData.getTotalQuestions();
-        const welcomeText = document.querySelector('#welcome-screen p');
-        if (welcomeText) {
-            welcomeText.textContent = `This exam consists of ${this.questionsPerExam} randomly selected questions from a pool of ${totalQuestions} questions.`;
+        const examDescription = document.getElementById('exam-description');
+        if (examDescription) {
+            examDescription.textContent = `Select the number of questions to begin. The exam pulls from a pool of ${totalQuestions} questions.`;
         }
         
-        // Initialize progress text
         this.progressText.textContent = `Question 0/${this.questionsPerExam}`;
         
-        // Load saved exams
         this.loadSavedExams();
+        this.initTheme();
         
         // Bind event listeners
         this.startButton.addEventListener('click', () => this.startExam());
@@ -61,14 +82,52 @@ class QuizApp {
         this.saveExamButton.addEventListener('click', () => this.saveExam());
         this.copyQuestionBtn.addEventListener('click', () => this.copyCurrentQuestion());
         this.copyIncorrectBtn.addEventListener('click', () => this.copyIncorrectQuestions());
-        
-        // Validate question count input
+        this.themeToggle.addEventListener('change', () => this.toggleTheme());
+
         this.questionCountInput.addEventListener('change', () => {
             let value = parseInt(this.questionCountInput.value);
-            if (isNaN(value) || value < 1) value = 65;
-            if (value > 65) value = 65;
+            if (isNaN(value) || value < 1) value = 1;
+            const maxQuestions = window.quizData.getTotalQuestions();
+            if (value > maxQuestions) value = maxQuestions;
             this.questionCountInput.value = value;
         });
+    }
+
+    initTheme() {
+        const darkMode = localStorage.getItem('darkMode') === 'true';
+        this.themeToggle.checked = darkMode;
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+        }
+    }
+
+    toggleTheme() {
+        if (this.themeToggle.checked) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('darkMode', 'true');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('darkMode', 'false');
+        }
+    }
+
+    showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+
+        this.toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                this.toastContainer.removeChild(toast);
+            }, 500);
+        }, 3000);
     }
 
     loadSavedExams() {
@@ -76,7 +135,7 @@ class QuizApp {
         this.savedExamsList.innerHTML = '';
         
         if (savedExams.length === 0) {
-            this.savedExamsList.innerHTML = '<p>No saved exams</p>';
+            this.savedExamsList.innerHTML = '<p>No saved exams found.</p>';
             return;
         }
         
@@ -89,8 +148,8 @@ class QuizApp {
             
             examElement.innerHTML = `
                 <div class="saved-exam-info">
-                    <p>Saved on: ${formattedDate}</p>
-                    <p>Progress: ${exam.currentQuestionIndex + 1}/${exam.questions.length} questions</p>
+                    <p><strong>Saved:</strong> ${formattedDate}</p>
+                    <p><strong>Progress:</strong> ${exam.currentQuestionIndex + 1}/${exam.questions.length} questions</p>
                 </div>
                 <div class="saved-exam-actions">
                     <button class="btn primary-btn resume-exam" data-index="${index}">Resume</button>
@@ -101,7 +160,6 @@ class QuizApp {
             this.savedExamsList.appendChild(examElement);
         });
         
-        // Add event listeners for resume and delete buttons
         this.savedExamsList.querySelectorAll('.resume-exam').forEach(button => {
             button.addEventListener('click', (e) => this.resumeExam(parseInt(e.target.dataset.index)));
         });
@@ -122,9 +180,8 @@ class QuizApp {
         
         savedExams.push(examData);
         localStorage.setItem('savedExams', JSON.stringify(savedExams));
-        
-        // Show confirmation message
-        alert('Exam saved successfully!');
+        this.loadSavedExams();
+        this.showToast('Exam saved successfully!');
     }
 
     resumeExam(index) {
@@ -136,25 +193,27 @@ class QuizApp {
         this.currentQuestionIndex = examData.currentQuestionIndex;
         this.questionsPerExam = this.questions.length;
         
+        this.mainHeader.style.display = 'none';
+        this.quizHeader.style.display = 'flex';
         this.welcomeScreen.classList.remove('active');
+        this.resultsScreen.classList.remove('active');
         this.quizScreen.classList.add('active');
         this.showQuestion();
     }
 
     deleteExam(index) {
-        if (confirm('Are you sure you want to delete this saved exam?')) {
-            const savedExams = JSON.parse(localStorage.getItem('savedExams') || '[]');
-            savedExams.splice(index, 1);
-            localStorage.setItem('savedExams', JSON.stringify(savedExams));
-            this.loadSavedExams();
-        }
+        const savedExams = JSON.parse(localStorage.getItem('savedExams') || '[]');
+        savedExams.splice(index, 1);
+        localStorage.setItem('savedExams', JSON.stringify(savedExams));
+        this.loadSavedExams();
+        this.showToast('Saved exam deleted.', 'danger');
     }
 
     startExam() {
-        // Get the number of questions from input
         let questionCount = parseInt(this.questionCountInput.value);
-        if (isNaN(questionCount) || questionCount < 1) questionCount = 65;
-        if (questionCount > 65) questionCount = 65;
+        const maxQuestions = window.quizData.getTotalQuestions();
+        if (isNaN(questionCount) || questionCount < 1) questionCount = 1;
+        if (questionCount > maxQuestions) questionCount = maxQuestions;
         
         this.questionsPerExam = questionCount;
         this.questions = window.quizData.getRandomQuestions(this.questionsPerExam);
@@ -162,12 +221,13 @@ class QuizApp {
         this.currentQuestionIndex = 0;
         this.score = 0;
         
-        // Start the exam timer
         this.startTime = Date.now();
         this.questionStartTime = this.startTime;
         this.questionTimes = [];
         this.startTimer();
         
+        this.mainHeader.style.display = 'none';
+        this.quizHeader.style.display = 'flex';
         this.welcomeScreen.classList.remove('active');
         this.quizScreen.classList.add('active');
         this.showQuestion();
@@ -183,17 +243,9 @@ class QuizApp {
             const minutes = Math.floor(elapsed / 60000);
             const seconds = Math.floor((elapsed % 60000) / 1000);
             
-            // Update timer display
             const timerDisplay = document.getElementById('timer');
             if (timerDisplay) {
                 timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Add warning colors based on time
-                if (minutes >= 80) {
-                    timerDisplay.classList.add('danger');
-                } else if (minutes >= 70) {
-                    timerDisplay.classList.add('warning');
-                }
             }
         }, 1000);
     }
@@ -202,18 +254,16 @@ class QuizApp {
         const question = this.questions[this.currentQuestionIndex];
         this.questionText.textContent = `${this.currentQuestionIndex + 1}. ${question.question}`;
         
-        // Clear previous options
         this.optionsContainer.innerHTML = '';
         
-        // Create option elements
-        question.options.forEach((option, index) => {
+        question.options.forEach((option) => {
             const optionElement = document.createElement('div');
             optionElement.className = 'option';
             optionElement.textContent = option;
             
-            // If this question was answered before, restore the selection
             if (this.userAnswers[this.currentQuestionIndex]) {
-                if (window.quizData.isMultipleAnswer(question)) {
+                const isMultiple = window.quizData.isMultipleAnswer(question);
+                if (isMultiple) {
                     if (this.userAnswers[this.currentQuestionIndex].includes(option)) {
                         optionElement.classList.add('selected');
                     }
@@ -226,18 +276,13 @@ class QuizApp {
             this.optionsContainer.appendChild(optionElement);
         });
 
-        // Update progress
         this.updateProgress();
         
-        // Update button states
         this.prevButton.disabled = this.currentQuestionIndex === 0;
         this.nextButton.disabled = !this.userAnswers[this.currentQuestionIndex];
-        this.submitButton.disabled = false;
+        this.submitButton.disabled = !!this.userAnswers[this.currentQuestionIndex];
         
-        // Update question start time
         this.questionStartTime = Date.now();
-        
-        // Hide copy button when showing a new question
         this.copyQuestionBtn.style.display = 'none';
     }
 
@@ -249,19 +294,19 @@ class QuizApp {
             optionElement.classList.toggle('selected');
             const selectedOptions = Array.from(this.optionsContainer.querySelectorAll('.option.selected'))
                 .map(opt => opt.textContent);
-            this.userAnswers[this.currentQuestionIndex] = selectedOptions;
+            this.userAnswers[this.currentQuestionIndex] = selectedOptions.length > 0 ? selectedOptions : null;
         } else {
-            // Remove previous selection
-            this.optionsContainer.querySelectorAll('.option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
+            this.optionsContainer.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
             optionElement.classList.add('selected');
             this.userAnswers[this.currentQuestionIndex] = selectedOption;
         }
+
+        this.submitButton.disabled = !this.userAnswers[this.currentQuestionIndex];
     }
 
     submitAnswer() {
-        // Record time taken for this question
+        if (!this.userAnswers[this.currentQuestionIndex]) return;
+
         const questionTime = Date.now() - this.questionStartTime;
         this.questionTimes.push(questionTime);
         
@@ -271,11 +316,14 @@ class QuizApp {
         
         this.optionsContainer.querySelectorAll('.option').forEach(option => {
             const optionText = option.textContent;
+            option.style.pointerEvents = 'none';
+
+            const isMultiple = Array.isArray(correctAnswer);
             
-            if (Array.isArray(correctAnswer)) {
+            if (isMultiple) {
                 if (correctAnswer.includes(optionText)) {
                     option.classList.add('correct');
-                } else if (userAnswer.includes(optionText)) {
+                } else if (userAnswer && userAnswer.includes(optionText)) {
                     option.classList.add('incorrect');
                 }
             } else {
@@ -289,13 +337,10 @@ class QuizApp {
 
         this.submitButton.disabled = true;
         this.nextButton.disabled = false;
-        
-        // Show the copy button after submission
         this.copyQuestionBtn.style.display = 'block';
         
-        // If this is the last question, show the results
         if (this.currentQuestionIndex === this.questions.length - 1) {
-            setTimeout(() => this.showResults(), 1500);
+            this.nextButton.textContent = 'Show Results';
         }
     }
 
@@ -310,6 +355,8 @@ class QuizApp {
         if (this.currentQuestionIndex < this.questions.length - 1) {
             this.currentQuestionIndex++;
             this.showQuestion();
+        } else {
+            this.showResults();
         }
     }
 
@@ -322,19 +369,8 @@ class QuizApp {
     calculateScore() {
         let correctCount = 0;
         this.questions.forEach((question, index) => {
-            const userAnswer = this.userAnswers[index];
-            const correctAnswer = question.correctAnswer;
-            
-            if (Array.isArray(correctAnswer)) {
-                if (userAnswer && 
-                    userAnswer.length === correctAnswer.length && 
-                    userAnswer.every(answer => correctAnswer.includes(answer))) {
-                    correctCount++;
-                }
-            } else {
-                if (userAnswer === correctAnswer) {
-                    correctCount++;
-                }
+            if (this.isAnswerCorrect(question, this.userAnswers[index])) {
+                correctCount++;
             }
         });
         
@@ -344,81 +380,74 @@ class QuizApp {
     showResults() {
         this.quizScreen.classList.remove('active');
         this.resultsScreen.classList.add('active');
+        this.mainHeader.style.display = 'flex';
+        this.quizHeader.style.display = 'none';
         
         const score = this.calculateScore();
-        const finalScoreElement = document.getElementById('final-score');
+        document.getElementById('final-score').textContent = score;
+
         const passFailStatus = document.getElementById('pass-fail-status');
+        passFailStatus.textContent = score >= 700 ? 'PASSED' : 'FAILED';
+        passFailStatus.style.color = score >= 700 ? 'var(--success-color)' : 'var(--danger-color)';
+
         const correctList = document.getElementById('correct-answers-list');
         const incorrectList = document.getElementById('incorrect-answers-list');
-        const correctCount = document.getElementById('correct-count');
-        const incorrectCount = document.getElementById('incorrect-count');
-        
-        finalScoreElement.textContent = score;
-        passFailStatus.textContent = score >= 700 ? 'PASSED!' : 'FAILED';
-        passFailStatus.style.color = score >= 700 ? '#4CAF50' : '#f44336';
-        
-        // Clear previous results
         correctList.innerHTML = '';
         incorrectList.innerHTML = '';
         
-        let correctAnswers = 0;
-        let incorrectAnswers = 0;
+        let correctAnswersCount = 0;
+        let incorrectAnswersCount = 0;
         
         this.questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
-            const correctAnswer = question.correctAnswer;
-            const isCorrect = Array.isArray(correctAnswer) 
-                ? userAnswer && 
-                  userAnswer.length === correctAnswer.length && 
-                  userAnswer.every(answer => correctAnswer.includes(answer))
-                : userAnswer === correctAnswer;
+            const isCorrect = this.isAnswerCorrect(question, userAnswer);
             
             const resultItem = document.createElement('div');
             resultItem.className = 'review-item';
             resultItem.innerHTML = `
                 <p><strong>Q${index + 1}:</strong> ${question.question}</p>
-                <p>Your Answer: ${Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer}</p>
-                <p>Correct Answer: ${Array.isArray(correctAnswer) ? correctAnswer.join(', ') : correctAnswer}</p>
+                <p><strong>Your Answer:</strong> ${userAnswer ? (Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer) : 'Not Answered'}</p>
+                <p><strong>Correct Answer:</strong> ${Array.isArray(question.correctAnswer) ? question.correctAnswer.join(', ') : question.correctAnswer}</p>
             `;
             
             if (isCorrect) {
                 correctList.appendChild(resultItem);
-                correctAnswers++;
+                correctAnswersCount++;
             } else {
                 incorrectList.appendChild(resultItem);
-                incorrectAnswers++;
+                incorrectAnswersCount++;
             }
         });
         
-        correctCount.textContent = correctAnswers;
-        incorrectCount.textContent = incorrectAnswers;
+        document.getElementById('correct-count').textContent = correctAnswersCount;
+        document.getElementById('incorrect-count').textContent = incorrectAnswersCount;
         
-        // Clear timer
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
         }
         
-        // Calculate and display timing statistics
         const totalTime = Date.now() - this.startTime;
         const totalMinutes = Math.floor(totalTime / 60000);
         const totalSeconds = Math.floor((totalTime % 60000) / 1000);
-        this.totalTimeDisplay.textContent = `${totalMinutes}:${totalSeconds.toString().padStart(2, '0')}`;
+        this.totalTimeDisplay.textContent = `${totalMinutes}m ${totalSeconds.toString().padStart(2, '0')}s`;
         
         const avgTime = this.questionTimes.reduce((a, b) => a + b, 0) / this.questionTimes.length;
-        const avgSeconds = Math.floor(avgTime / 1000);
-        this.avgTimeDisplay.textContent = `${avgSeconds} seconds`;
+        const avgSeconds = Math.round(avgTime / 1000);
+        this.avgTimeDisplay.textContent = `${avgSeconds}s`;
     }
 
     restartExam() {
         this.resultsScreen.classList.remove('active');
         this.welcomeScreen.classList.add('active');
+        this.mainHeader.style.display = 'flex';
+        this.quizHeader.style.display = 'none';
+        this.nextButton.textContent = 'Next';
     }
 
     copyCurrentQuestion() {
         const question = this.questions[this.currentQuestionIndex];
         const text = this.formatQuestionForCopy(question);
-        this.copyToClipboard(text);
-        this.showCopyFeedback(this.copyQuestionBtn);
+        this.copyToClipboard(text, 'Current question copied to clipboard.');
     }
 
     copyIncorrectQuestions() {
@@ -426,9 +455,13 @@ class QuizApp {
             !this.isAnswerCorrect(q, this.userAnswers[index])
         );
         
+        if (incorrectQuestions.length === 0) {
+            this.showToast('No incorrect questions to copy.', 'warning');
+            return;
+        }
+
         const text = incorrectQuestions.map(q => this.formatQuestionForCopy(q)).join('\n\n');
-        this.copyToClipboard(text);
-        this.showCopyFeedback(this.copyIncorrectBtn);
+        this.copyToClipboard(text, 'Incorrect questions copied to clipboard.');
     }
 
     formatQuestionForCopy(question) {
@@ -440,30 +473,26 @@ class QuizApp {
             question.correctAnswer.join(', ') : question.correctAnswer}`;
     }
 
-    copyToClipboard(text) {
-        navigator.clipboard.writeText(text).catch(err => {
+    copyToClipboard(text, successMessage) {
+        navigator.clipboard.writeText(text).then(() => {
+            this.showToast(successMessage);
+        }).catch(err => {
             console.error('Failed to copy text: ', err);
+            this.showToast('Failed to copy text.', 'danger');
         });
     }
 
-    showCopyFeedback(button) {
-        button.classList.add('copied');
-        setTimeout(() => {
-            button.classList.remove('copied');
-        }, 2000);
-    }
-
     isAnswerCorrect(question, userAnswer) {
-        if (Array.isArray(question.correctAnswer)) {
+        const correctAnswer = question.correctAnswer;
+        if (Array.isArray(correctAnswer)) {
             return Array.isArray(userAnswer) && 
-                   question.correctAnswer.length === userAnswer.length &&
-                   question.correctAnswer.every(ans => userAnswer.includes(ans));
+                   correctAnswer.length === userAnswer.length &&
+                   correctAnswer.every(ans => userAnswer.includes(ans));
         }
-        return userAnswer === question.correctAnswer;
+        return userAnswer === correctAnswer;
     }
 }
 
-// Initialize the app when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new QuizApp();
-}); 
+});
